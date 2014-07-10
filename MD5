@@ -1,4 +1,4 @@
-24d1d4e8ed68642239137c1c1aaa93b8 *DESCRIPTION
+166faa8fcf1419cf3c2d7da448db9061 *DESCRIPTION
 25b87ddd96bec60e8968b352f81cea76 *NAMESPACE
 22219a6d9606cf69293b050422cd307b *R/check.correlation.R
 91323699482e8dcc68adb42bcde625a5 *R/mcc.R
@@ -18,8 +18,8 @@ dda7b864858d8e704b638147b267227f *R/summary.traj.R
 ba6fcf982e9191fdaebdf7f7c4cb0b73 *R/wrapperTraj.R
 e33e75135a2fab3478cabe691e8e2b6d *build/vignette.rds
 04589b862d966724f09b1e8ffdfdb54a *data/example.data.rda
-30a188ccacf2c97f0da76c09aa588890 *inst/CITATION
-f24db4e5d9279cab60fa9906b902ad65 *inst/doc/Measurement_Equations.pdf
+6c428092fac019cc1f00f0aa639d648e *inst/CITATION
+cdb93220e5f0d7bed4290b5836e1ee02 *inst/doc/Measurement_Equations.pdf
 3fc522421707d6b3bc7e20f48258936e *inst/doc/trajVignette.R
 541b9eb8fc377649f738980caf8025fd *inst/doc/trajVignette.Rnw
 64f64aa22715fa1ddef66db9dc788dc9 *inst/doc/trajVignette.pdf
@@ -31,6 +31,6 @@ bc005ef641a758e980ffa775928b85da *man/plotMedTraj.Rd
 d59283aff81fd8892663b9d526c34885 *man/step1measures.Rd
 ac186a14b08f2b5d7a649ff881bb5e55 *man/step2factors.Rd
 beda61ca18edf511917d8aa8c7040e5a *man/step3clusters.Rd
-cc229c1dc4ae2a5fdbbee95936d7f481 *man/traj-package.Rd
+6c0b577b33d82e8d4085b955bbba9ee3 *man/traj-package.Rd
 80cbaa40bdff9894ee55008b79628606 *man/wrapperTraj.Rd
 541b9eb8fc377649f738980caf8025fd *vignettes/trajVignette.Rnw

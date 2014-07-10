@@ -1,8 +1,7 @@
 citHeader("To cite package 'traj' in publications use:")
      
-     desc <- packageDescription("traj")
-     year <- sub(".*(2[[:digit:]]{3})-.*", "\\1", desc$Date)
-     vers <- paste("R package version", desc$Version)
+     year <- sub(".*(2[[:digit:]]{3})-.*", "\\1", meta$Date)
+     vers <- paste("R package version", meta$Version)
      
      citEntry(entry="Article",
               title = "Classification of patterns of delirium severity scores over time in an elderly population",

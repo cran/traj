@@ -13,7 +13,7 @@ The procedure involves (1) calculating 24 measures describing the features of th
 \details{
 \tabular{ll}{
 Package: \tab traj\cr
-Version: \tab 1.1\cr
+Version: \tab 1.2\cr
 Date: \tab 2014-07-10\cr
 License: \tab GPL-2\cr
 LazyData: \tab true\cr
