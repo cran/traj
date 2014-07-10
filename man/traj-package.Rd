@@ -8,21 +8,20 @@ Trajectory Analysis
 \description{
 Implements the three step procedure proposed by Leffondree et al. (2004) to identify clusters of individual longitudinal trajectories. 
 
-The procedure involves (1) calculating 24 measures describing the features of the trajectories; (2) using factor analysis to select a subset of the 24 measures and (3) using cluster analysis to identify clusters of trajectories, and classify each individual trajectory in one of the clusters.
-~~ A concise (1-5 lines) description of the package ~~
+The procedure involves (1) calculating 24 measures describing the features of the trajectories, (2) using factor analysis to select a subset of the 24 measures and (3) using cluster analysis to identify clusters of trajectories, and classify each individual trajectory in one of the clusters.
 }
 \details{
 \tabular{ll}{
 Package: \tab traj\cr
-Version: \tab 1.0\cr
+Version: \tab 1.1\cr
 Date: \tab 2014-07-10\cr
 License: \tab GPL-2\cr
 LazyData: \tab true\cr
 Depends: \tab R (>= 3.0.3)\cr
 Imports: \tab cluster, psych, pastecs, NbClust, graphics, grDevices, stats,
 utils, GPArotation\cr
-Packaged: \tab 2014-10-21 17:48:21 UTC; Dan\cr
-Built: \tab R 3.0.3; ; 2014-10-21 17:49:32 UTC; windows\cr
+Packaged: \tab 2014-10-21 17:48:21 UTC, Dan\cr
+Built: \tab R 3.0.3, , 2014-10-21 17:49:32 UTC, windows\cr
 }
 
 Index:
