@@ -1,0 +1,53 @@
+citHeader("To cite package 'traj' in publications use:")
+     
+     desc <- packageDescription("traj")
+     year <- sub(".*(2[[:digit:]]{3})-.*", "\\1", desc$Date)
+     vers <- paste("R package version", desc$Version)
+     
+     citEntry(entry="Article",
+              title = "Classification of patterns of delirium severity scores over time in an elderly population",
+              author = personList(as.person("Marie-Pierre Sylvestre"),
+                                  as.person("Jane McCusker "),
+                                  as.person("Martin Cole"),
+                                  as.person("Armelle Regeasse"),
+                                  as.person("Eric Belzile"),
+                                  as.person("Michal Abrahamowicz")),
+              journal = "International psychogeriatrics",
+              volume = "18",
+              number = "04",
+              pages = "667--680",
+              year = "2006",
+              publisher = "Cambridge University Press",
+              note = vers,
+     
+              textVersion =
+              paste("Sylvestre MP, et al. (2006). Classification of patterns of delirium severity scores over time in an elderly population. International Psychogeriatrics, 18(4), 667-680. doi:10.1017/S1041610206003334. ", sep=""))
+
+
+
+    citEntry(entry="Article",
+              title = "Statistical measures were proposed for identifying longitudinal patterns of change in quantitative health indicators",
+              author = personList(as.person("Karen Leffondree"),
+                                  as.person("Michal Abrahamowicz"),
+                                  as.person("Armelle Regeasse"),
+                                  as.person("Regeasse Armelle"),
+                                  as.person("Gillian A Hawker"),
+                                  as.person("Elizabeth M Badley"),
+                                  as.person("Jane McCusker"),
+                                  as.person("Eric Belzile")),
+              journal = "Journal of clinical epidemiology",
+              volume = "57",
+              number = "10",
+              pages = "1049--1062",
+              year = "2004",
+              publisher = "Elsevier",
+              note = vers,    
+              textVersion =
+              paste("Leffondree, K. et al. (2004). Statistical measures were proposed for identifying longitudinal patterns of change in quantitative health indicators. Journal of Clinical Epidemiology, 57, 1049-1062. doi : 10.1016/j.jclinepi.2004.02.012. ", sep=""))
+
+
+
+
+
+
+
