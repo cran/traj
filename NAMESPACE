@@ -1,12 +1,13 @@
-import(pastecs)
-import(psych)
 import(cluster)
-import(NbClust)
 import(graphics)
 import(grDevices)
+import(GPArotation)
+import(NbClust)
+import(pastecs)
+import(psych)
 import(stats)
 import(utils)
-import(GPArotation)
+
 
 S3method(plot,traj)
 S3method(print,traj)

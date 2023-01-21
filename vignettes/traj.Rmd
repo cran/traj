@@ -1,0 +1,173 @@
+---
+title: "Using $\texttt{traj}$ Package to Identify Clusters of Longitudinal Trajectories"
+author: 
+
+  - Marie-Pierre Sylvestre^[Department Social and Preventive Medicine, Université de Montréal, CHUM Research Centre]
+  # - Gillis Delmas TCHOUANGUE DINKOU^[CHUM Resarch Centre]
+  - Dan Yannick^[Statistical Programming, CHUM Research Centre]
+  
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+vignette: >
+  %\VignetteIndexEntry{traj}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+### $\texttt{Abstract}$
+
+The $\texttt{traj}$ package implements the 3-step procedure proposed by Leffondre et al. (2004) to identify clusters of longitudinal trajectories. The first step calculates 24 summary measures that describes features of the trajectories. The second step performs a factor analysis on these 24 measures to select measures that best describenthe main features of the trajectories. The third step classifies the trajectories into clusters based on the previously selected factors. The $\texttt{traj}$ package also offers a wide variety of plotting function used to visualize the results. 
+
+
+This vignette illustrates the use of the $\texttt{traj}$ package using simulated data. A more detailed description of the methods can be found in Sylvestre et al. (2006)  or Leffondre et al. (2004). 
+
+## $\texttt{Data}$
+
+Data consist in two dataframes. We only need the first one. The first dataframe, $\texttt{example.data\$data}$, contains the values for each individual trajectory. Each row correspond to a trajectory.
+
+```{r}
+library(traj)
+head(example.data$data)
+```
+
+<!-- The second dataframe, $\texttt{example.data\$time}$, contains the time points at which the corresponding values for each individual trajectory were measured. Both dataframes must be of the same dimension. -->
+
+```{r, eval=FALSE, echo=FALSE}
+head(example.data$time)
+```
+
+
+## $\texttt{Analysis}$
+
+The first step in the analysis consists of the computing 24 measures of each trajectory.
+
+The 24 measures are:
+
+- Range
+- Mean-over-time
+- Standard deviation (SD)
+- Coefficient of variation (CV)
+- Change
+- Mean change per unit time
+- Change relative to the first score
+- Change relative to the mean over time
+- Slope of the linear model
+- $R^2$: Proportion of variance explained by the linear model
+- Maximum of the first differences
+- SD of the first differences
+- SD of the first differences per time unit
+- Mean of the absolute first differences
+- Maximum of the absolute first differences
+- Ratio of the maximum absolute difference to the mean-over-time
+- Ratio of the maximum absolute first difference to the slope
+- Ratio of the SD of the first differences to the slope
+- Mean of the second differences
+- Mean of the absolute second differences
+- Maximum of the absolute second differences
+- Ration of the maximum absolute second difference to the mean-over-time
+- Ratio of the maximum absolute second difference to mean absolute first difference
+- Ratio of the mean absolute second difference to the mean absolute first difference
+
+
+The 24 measures can be computed using the step1measures function.
+
+```{r}
+s1 = step1measures(example.data$data, ID = TRUE)
+head(s1$measurments)
+```
+
+
+Each row in the dataframe returned by $\texttt{step1measures}$ corresponds to the trajectory on the same row in the input data ($\texttt{example.data\$data}$). For each trajectory, the 24 measures have been calculated and correspond to columns m1 to m24.
+
+
+In the second step of the analysis, a factor analysis is performed to select a subset of measures that describes the main features of the trajectories. The function step2factors is used to perform the factor analysis.
+
+```{r}
+s2 = step2factors(s1)
+head(s2$factors)
+```
+
+
+In this example, the step2factors has identified measures 4, 5, 21 and 24 as the main factors of this set of trajectories. Measures 6, 13 and 18 were not considered because they were too correlated with other measures (measures with a correlation higher than $0.95$ are omitted from the factor analysis). 
+
+Once this step is done, the third step of the procedure consists in clustering the trajectories based on the measures identified in the factor analysis. This step is implemented in the step3clusters function. Two options are available to select the number of clusters. First, the user can a priori decide on the number of clusters, such as in the following example in which the number of clusters is set to 4. 
+
+
+```{r}
+s3 = step3clusters(s2, nclusters = 4)
+```
+
+
+Alternatively, the number of clusters can be left blank in which case the step3clusters function will rely on the $\texttt{NbClust}$ function from the $\texttt{NbClust}$ package to determine the optimal number of clusters based on one of the criteria available in $\texttt{NbClust}$. Please see $\texttt{NbClust}$ documentation for more details.
+
+The function step3clusters assigns each trajectory to one and only one cluster and returns a dataframe that identifies cluster membership.
+
+
+```{r}
+head(s3$clusters)
+s3$clust.distr
+```
+
+
+The $\texttt{traj}$ object returned by the function step3clusters can be plotted by an array of plotting functions, as described in the next section.
+
+## $\texttt{Plotting the traj object}$
+
+The $\texttt{traj}$ object created by $\texttt{step3clusters}$ can be plotted by an array of plotting functions.
+
+```{r}
+plot(s3)
+```
+
+
+This function selects 10 random trajectories from each cluster and plots them using randomly selected colours. The user can specify the number of trajectories to plot, the colours or any other generic plotting parameter. The user can request that trajectories from only one cluster be plotted.
+
+\newpage
+
+
+The $\texttt{plotMeanTraj}$ function plots the mean trajectory of every cluster. The user can request that trajectories from only one cluster be plotted.
+
+
+```{r}
+plotMeanTraj(s3)
+```
+
+
+\newpage
+
+The $\texttt{plotMedTraj}$ function plots the median trajectory of every cluster with 10th and 90th percentiles. The user can request that trajectories from only one cluster be plotted.
+
+```{r}
+plotMedTraj(s3)
+```
+
+\newpage
+The $\texttt{plotBoxplotTraj}$ function will plot the box-plot distribution of every time point in each cluster. The user can request that trajectories from only one cluster be plotted.
+
+```{r}
+plotBoxplotTraj(s3)
+```
+
+\newpage
+
+The $\texttt{plotCombTraj}$ function will plot the mean or median of all the clusters on one single graph. Different colours can be selected as well as different line styles.
+
+```{r}
+plotCombTraj(s3)
+```
+
+
+
+## References
+
+- Sylvestre MP; et al. (2006). Classification of patterns of delirium severity scores over time in an elderly population. International Psychogeriatrics; 18(4); 667-680. doi:10.1017/S1041610206003334.
+
+- Leffondree; K. et al. (2004). Statistical measures were proposed for identifying longitudinal patterns of change in quantitative health indicators. Journal of Clinical Epidemiology; 57; 1049-1062. doi : 10.1016/j.jclinepi.2004.02.012.
+
