@@ -1,4 +1,3 @@
- 
 #' @title Compute 24 Measures Describing the Features of the Trajectories
 #' @description Compute 24 measures for each of the Trajectories. See details for the list of measures.
 #' @param Data A \emph{n} by \emph{m} matrix or data frame containing the values of each individual trajectory. Each row corresponds to one of the \emph{n} trajectories, while the \emph{m} columns correspond to the ordered values of a given trajectory. See details.
@@ -14,7 +13,7 @@
 #'colunm of both the \code{Data} and \code{Time} data.frames.
 
 #'The 24 measures are:
-  
+
 #'1. Range\cr
 #'2. Mean-over-time*\cr
 #'3. Standard deviation (SD)\cr
@@ -262,19 +261,19 @@ step1measures <- function (Data, ID = FALSE, verbose = TRUE) {
   m22.na.pos = which(is.na(output$m22) | is.infinite(output$m22))
   if (length(m22.na.pos) != 0)
     output$m22[m22.na.pos] = output$m21[m22.na.pos]/mean.0
-
+  
   ########## HERE
   temp.data = data[(data[, 1] != 0), 1]# add a 1 here
   abs.temp.data = abs(temp.data)
-#  if (nrow(temp.data) == 0)
-#    y1.0 = 1e-04
- #else
+  #  if (nrow(temp.data) == 0)
+  #    y1.0 = 1e-04
+  #else
   y1.0 = temp.data[which.min(abs.temp.data)]/100 # is zero but should not
-
+  
   m7.na.pos = which(is.na(output$m7) | is.infinite(output$m7))
   if (length(m7.na.pos) != 0) {
     if (length(m7.na.pos) > 1)
-
+      
       output$m7[m7.na.pos] = (apply(data[m7.na.pos, ], 1, last, na.rm = TRUE) - apply(data[m7.na.pos,], 1, first, na.rm = TRUE))/y1.0
     else output$m7[m7.na.pos] = (last(data[m7.na.pos, ], na.rm = TRUE) - first(data[m7.na.pos, ], na.rm = TRUE))/y1.0
   }

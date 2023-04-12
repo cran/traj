@@ -1,7 +1,6 @@
 import(cluster)
 import(graphics)
 import(grDevices)
-import(GPArotation)
 import(NbClust)
 import(pastecs)
 import(psych)

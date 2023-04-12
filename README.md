@@ -4,6 +4,8 @@
 # traj
 
 <!-- badges: start -->
+
+[![R-CMD-check](https://github.com/tchouangue/traj/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tchouangue/traj/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The goal of $\texttt{traj}$ is to implement the three-step procedure
@@ -42,8 +44,7 @@ s1 = step1measures(data, ID=TRUE)
 
 # Step 3. Factor analysis  
 s2 = step2factors(s1)
-#> [1] "m6 is removed because it is perfectly correlated with m5"  
-#> [2] "m13 is removed because it is perfectly correlated with m12"
+#> [1] "m6 is removed because it is perfectly correlated with m5"   "m13 is removed because it is perfectly correlated with m12"
 #> [1] "Computing reduced correlation e-values..."
 
 # Step 4. Clustering the trajectories

@@ -1,4 +1,3 @@
-
 #' @title Wrapper Function to Perform Trajectory Analysis
 #' @description Run three steps of trajectory analysis with default parameters.
 #' @param Data Data frame containing trajectory data.
@@ -38,6 +37,6 @@ wrapperTraj <- function(Data, ID = FALSE)
   s1 = step1measures(Data, ID = ID)
   s2 = step2factors(s1)
   s3 = step3clusters(s2)
-
+  
   return(s3)
 }
