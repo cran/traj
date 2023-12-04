@@ -1,3 +1,7 @@
-# traj 1.3
+# traj 2.0.0
 
-* R/DESCRIPTION: replacing previous import ‘GPArotation::equamax’ by ‘psych::equamax’ when loading ‘traj’
+# traj 1.0.0
+
+# traj 0.0.0.9000
+
+* Added a `NEWS.md` file to track changes to the package.

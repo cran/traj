@@ -4,25 +4,29 @@
 \name{traj-package}
 \alias{traj}
 \alias{traj-package}
-\title{traj: Trajectory Analysis}
+\title{traj: Clustering of Functional Data Based on Measures of Change}
 \description{
-Implements the three-step procedure proposed by Leffondree et al. (2004) to identify clusters of individual longitudinal trajectories. The procedure involves (1) calculating 24 measures describing the features of the trajectories; (2) using factor analysis to select a subset of the 24 measures and (3) using cluster analysis to identify clusters of trajectories, and classify each individual trajectory in one of the clusters.
+Implements the three-step procedure proposed by Leffondree et al. (2004) to identify clusters of individual longitudinal trajectories. The procedure involves (1) calculating a number of measures of change capturing various features of the trajectories; (2) using a Principal Component Analysis based dimension reduction algorithm to select a subset of measures and (3) using the K-means clustering algorithm to identify clusters of trajectories.
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/tchouangue/traj}
-  \item Report bugs at \url{https://github.com/tchouangue/traj/issues}
+  \item \url{https://CRAN.R-project.org/package=traj}
 }
 
 }
 \author{
-\strong{Maintainer}: Gillis Delmas TCHOUANGUE DINKOU \email{gillisdla2@gmail.com}
+\strong{Maintainer}: Laurence Boulanger \email{laurence.boulanger@umontreal.ca}
 
 Authors:
 \itemize{
-  \item Marie-Pierre Sylvestre
-  \item Dan Vatnik
+  \item Marie-Pierre Sylvestre \email{marie-pierre.sylvestre@umontreal.ca}
+}
+
+Other contributors:
+\itemize{
+  \item Gillis Delmas Tchouangue Dinkou [contributor]
+  \item Dan Vatnik [contributor]
 }
 
 }
