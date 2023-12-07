@@ -195,7 +195,7 @@ Step2Selection <-
             if (j > 1) {
               w <-
                 which(row.names(principal.factors$loadings) %in% principal.variables)
-              aux <- principal.factors$loadings[-w,]
+              aux <- principal.factors$loadings[-w, ]
             }
             principal.variables[j] <- names(which.max(abs(aux[, j])))
           }
@@ -233,9 +233,9 @@ Step2Selection <-
 print.trajSelection <- function(x, ...) {
   print(
     paste(
-      x$correlations[, 1],
+      x$colinear.variables[, 1],
       " was discarded because it is perfectly or almost perfectly correlated with ",
-      x$correlations[, 2],
+      x$colinear.variables[, 2],
       ".",
       sep = ""
     )

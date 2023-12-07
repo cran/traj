@@ -608,7 +608,7 @@ Step1Measures <-
     
     # Remove the measures that are constant because (1) these are not useful for
     # discriminating between the trajectories (2) they cause problem with the
-    # CheckCorrelation function below because their variance is 0 so division by 0
+    # CheckCorrelation function later because their variance is 0 so division by 0
     # occurs when computing correlation.
     flag <- c()
     for (j in seq_len(ncol(output))) {

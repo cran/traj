@@ -203,19 +203,19 @@ plot.trajClusters <-
       CI.high <- list()
       
       
-      for (j in 1:x$nclusters) {
+      for (j in seq_len(x$nclusters)) {
         which.j <- which(x$partition[, 2] == j)
         
         if (spline == TRUE) {
-          data.cluster.j <- data.new[which.j,-1]
+          data.cluster.j <- data.new[which.j, -1, drop = FALSE]
         } else{
-          data.cluster.j <- x$data[which.j,-1]
+          data.cluster.j <- x$data[which.j, -1, drop = FALSE]
         }
         
         col.keep <-
           colSums(is.na(data.cluster.j)) < nrow(data.cluster.j) #identifies the columns which are not mono NA
         
-        data.cluster.j <- data.cluster.j[, col.keep]
+        data.cluster.j <- data.cluster.j[, col.keep, drop = FALSE]
         
         mean.traj.j <- apply(data.cluster.j, 2, mean.na.rm)
         
@@ -236,16 +236,19 @@ plot.trajClusters <-
         
         df <- length(which.j) - 1
         
-        CI.low[[j]] <-
-          mean.traj.j - qt(p = 0.025,
-                           df = df,
-                           lower.tail = FALSE) * sd.traj.j / sqrt(length(which.j))
-        
-        CI.high[[j]] <-
-          mean.traj.j + qt(p = 0.025,
-                           df = df,
-                           lower.tail = FALSE) * sd.traj.j / sqrt(length(which.j))
-        
+        if(df > 0){
+          CI.low[[j]] <-
+            mean.traj.j - qt(p = 0.025,
+                             df = df,
+                             lower.tail = FALSE) * sd.traj.j / sqrt(length(which.j))
+          
+          CI.high[[j]] <-
+            mean.traj.j + qt(p = 0.025,
+                             df = df,
+                             lower.tail = FALSE) * sd.traj.j / sqrt(length(which.j)) 
+        } else {
+          CI.low[[j]] <- CI.high[[j]] <- mean.traj.j
+        }
       }
       
       if (spline == TRUE) {
@@ -257,7 +260,7 @@ plot.trajClusters <-
         main.mean <-
           paste("Pointwise mean \n of smoothed trajectories", sep = "")
         main.mean2 <-
-          paste("Pointwise mean \n of smoothed trajectory \n and 95% CI" , sep =
+          paste("Pointwise mean of smoothed \n trajectory and 95% CI" , sep =
                   "")
       } else {
         main.med <- paste("Pointwise median trajectories", sep = "")
@@ -425,15 +428,15 @@ plot.trajClusters <-
     
     if (random.condition) {
       traj.by.clusters <- list()
-      for (k in 1:x$nclusters) {
+      for (k in seq_len(x$nclusters)) {
         traj.by.clusters[[k]] <-
-          x$data[which(x$partition[, 2] == k),-c(1)]
+          x$data[which(x$partition[, 2] == k),-c(1), drop = FALSE]
       }
       
       time.by.clusters <- list()
       for (k in 1:x$nclusters) {
         time.by.clusters[[k]] <-
-          x$time[which(x$partition[, 2] == k),-c(1)]
+          x$time[which(x$partition[, 2] == k),-c(1), drop = FALSE]
       }
       
       # Plot (max) sample.size random trajectories from each group
@@ -445,7 +448,7 @@ plot.trajClusters <-
       smpl.time <-
         matrix(nrow = 0, ncol = ncol(x$time) - 1)
       
-      for (k in 1:x$nclusters) {
+      for (k in seq_len(x$nclusters)) {
         size <- min(sample.size, nrow(traj.by.clusters[[k]]))
         smpl <-
           sample(x = seq_len(nrow(traj.by.clusters[[k]])),
@@ -453,8 +456,8 @@ plot.trajClusters <-
                  replace = FALSE)
         smpl <- smpl[order(smpl)]
         
-        smpl.traj.by.clusters[[k]] <- traj.by.clusters[[k]][smpl, ]
-        smpl.time.by.clusters[[k]] <- time.by.clusters[[k]][smpl, ]
+        smpl.traj.by.clusters[[k]] <- traj.by.clusters[[k]][smpl, , drop = FALSE]
+        smpl.time.by.clusters[[k]] <- time.by.clusters[[k]][smpl, , drop = FALSE]
         
         smpl.traj <- rbind(smpl.traj, smpl.traj.by.clusters[[k]])
         smpl.time <- rbind(smpl.time, smpl.time.by.clusters[[k]])
@@ -473,8 +476,8 @@ plot.trajClusters <-
         main = "Sample trajectories"
       )
       
-      for (k in 1:x$nclusters) {
-        for (i in 1:min(size, x$partition.summary[k])) {
+      for (k in seq_len(x$nclusters)) {
+        for (i in seq_len(min(size, x$partition.summary[k]))) {
           lines(
             x = na.omit(smpl.time.by.clusters[[k]][i,]),
             y = na.omit(smpl.traj.by.clusters[[k]][i,]),
@@ -485,7 +488,7 @@ plot.trajClusters <-
         legend(
           "topright",
           col = color.pal[1:k],
-          legend = paste(1:3)[1:k],
+          legend = paste(seq_len(x$nclusters))[1:k],
           lty = rep(1, k)
         )
       }
@@ -510,10 +513,10 @@ plot.trajClusters <-
           which(c((plot.counter + 1):(plot.counter + nb.measures)) %in% which.plots)
       }
       
-      selection <- x$selection[,-c(1)]
+      selection <- x$selection[, -c(1)]
       
       selection.by.clusters <- list()
-      for (k in 1:x$nclusters) {
+      for (k in seq_len(x$nclusters)) {
         selection.by.clusters[[k]] <-
           selection[which(x$partition[, 2] == k),]
       }
@@ -540,7 +543,7 @@ plot.trajClusters <-
       for (m in which.scatter) {
         par(mfrow = good.grid)
         
-        for (n in c(1:(nb.measures - 1))) {
+        for (n in seq_len(nb.measures - 1)) {
           plot(
             x = 0,
             y = 0,
@@ -558,7 +561,7 @@ plot.trajClusters <-
             )
           )
           
-          for (k in 1:x$nclusters) {
+          for (k in seq_len(x$nclusters)) {
             lines(
               x = selection.by.clusters[[k]][, m],
               y = selection.by.clusters[[k]][,-c(m)][, n],
@@ -573,7 +576,7 @@ plot.trajClusters <-
               lty = rep(0, k),
               pch = rep(16, k),
               col = color.pal[1:k],
-              legend = paste(1:3)[1:k]
+              legend = paste(seq_len(x$nclusters))[1:k]
             )
           }
         }
