@@ -3,9 +3,10 @@
 #'@description This function applies the following dimension reduction algorithm
 #'  to the measures computed by \code{\link[traj]{Step1Measures}}:
 #' \enumerate{
-#'   \item Use principal component analysis (PCA) on the measure to form factors summarizing the variability in the measures;
-#'   \item Drop the factors whose variance is smaller than any one of the normalized measures;
-#'   \item Performs a varimax rotation on the remaining factors;
+#'   \item Drop the measures whose values are constant across the trajectories;
+#'   \item Use principal component analysis (PCA) on the measures to form factors summarizing the variability in the measures;
+#'   \item Drop the factors whose variance is smaller than any one of the standardized measures;
+#'   \item Perform a varimax rotation on the remaining factors;
 #'   \item For each rotated factor, select the measure that has the highest correlation (aka factor loading) with it and that hasn't yet been selected;
 #'   \item Drop the remaining measures.
 #' }
@@ -13,24 +14,19 @@
 #'@param trajMeasures object of class \code{trajMeasures} as returned by
 #'  \code{\link[traj]{Step1Measures}}.
 #'@param num.select an optional positive integer indicating the number of
-#'  factors to keep in the second stage of the algorithm. Defaults to NULL so
+#'  factors to keep in the second stage of the algorithm. Defaults to \code{NULL} so
 #'  that all factors with variance greater than any one of the normalized
 #'  measures are selected.
 #'@param discard an optional vector of positive integers corresponding to the
 #'  measures to be dropped from the analysis. See
 #'  \code{\link[traj]{Step1Measures}} for the list of measures. Defaults to
-#'  NULL.
+#'  \code{NULL}.
 #'@param select an optional vector of positive integers corresponding to the
-#'  measures to forcefully select. Defaults to NULL. If a vector is supplied,
+#'  measures to forcefully select. Defaults to \code{NULL}. If a vector is supplied,
 #'  the five-steps selection algorithm described above is bypassed and the
 #'  corresponding measures are selected instead.
-#'
-#'  Can be NULL or a numeric vector corresponding to the numerical identifier of
-#'  measures present in \code{trajMeasures}. If a numeric vector is supplied,
-#'  then four-steps selection algorithm described above is bypassed and the
-#'  corresponding measures are selected instead.
-#'@param x object of class trajSelection.
-#'@param object object of class trajSelection.
+#'@param x object of class \code{trajSelection}.
+#'@param object object of class  \code{trajSelection}.
 #'@param ... further arguments passed to or from other methods.
 #'
 #'@return An object of class \code{trajSelection}; a list containing the values
@@ -40,19 +36,6 @@
 #'@importFrom psych principal
 #'@importFrom stats cor
 #'
-#'@details In the presence of highly correlated measures (Pearson correlation >
-#'  0.98), the function selects the highest-ranking measure on the list (see
-#'  \code{\link[traj]{Step1Measures}}) and discards the others. Because the
-#'  K-means algorithm is sensitive to outliers, measures which are quotients
-#'  (i.e. 4, 7, 8, 15-17, 21-26) are prevented from taking extremely large or
-#'  infinite values (caused by division by 0). Nishiyama's improved Chebychev
-#'  bound is used to determine extreme values for each measure, corresponding to
-#'  a 0.3% probability threshold. Extreme values beyond the threshold are capped
-#'  to the 0.3% probability threshold. Measures corresponding to quotients which
-#'  would be of the form 0/0 are set to 1. PCA is applied on the remaining
-#'  measures using the \code{\link[psych]{principal}} function from the
-#'  \code{psych} package.
-#'
 #'@references Leffondre K, Abrahamowicz M, Regeasse A, Hawker GA, Badley EM,
 #'  McCusker J, Belzile E. Statistical measures were proposed for identifying
 #'  longitudinal patterns of change in quantitative health indicators. J Clin
@@ -61,12 +44,15 @@
 #'
 #' @examples
 #' \dontrun{
-#'m = Step1Measures(trajdata, ID = TRUE)
+#'data("trajdata")
+#'trajdata.noGrp <- trajdata[, -which(colnames(trajdata) == "Group")] #remove the Group column
+#'
+#'m = Step1Measures(trajdata.noGrp, measure = c(1:18), ID = TRUE)
 #'s = Step2Selection(m)
 #'
-#'s$RC$loadings
+#'print(s)
 #'
-#'s2 = Step2Selection(m, select = c(10, 12, 8, 4))
+#'s2 = Step2Selection(m, select = c(3, 13, 11, 15))
 #'}
 #'
 #'
@@ -79,7 +65,8 @@ Step2Selection <-
   function (trajMeasures,
             num.select = NULL,
             discard = NULL,
-            select = NULL) {
+            select = NULL
+            ) {
     input <- list(num.select, discard, select)
     names(input) <- c("num.select", "discard", "select")
     
@@ -89,15 +76,15 @@ Step2Selection <-
     
     data <- data.frame(trajMeasures$measures)
     ID <- data[, 1]
-    data <- data.frame(data[,-1])
+    data <- data.frame(data[, -1])
     
     if (!is.null(select)) {
       m.select <- paste("m", select, sep = "")
       if (FALSE %in% (m.select %in% colnames(data))) {
-        stop("Select 'select' from the measures included in step1measure.")
+        stop("The 'select' argument must only contain measures included in Step1Measures.")
       } else {
-        output <- cbind(ID, data[, m.select])
-        colnames(output) <- c("ID", paste("m", select, sep = ""))
+        output <- cbind(ID, data[, m.select, drop = FALSE])
+        #colnames(output) <- c("ID", paste("m", select, sep = ""))
       }
       
       trajSelection <-
@@ -106,7 +93,8 @@ Step2Selection <-
             selection = output,
             PC = NULL,
             RC = NULL,
-            colinear.variables = NULL,
+            constant.measures = NULL,
+            correlated.measures = NULL,
             measures = trajMeasures$measures,
             data = trajMeasures$data,
             time = trajMeasures$time,
@@ -122,10 +110,10 @@ Step2Selection <-
       if (!is.null(discard)) {
         mes.to.discard <- paste("m", discard, sep = "")
         if (FALSE %in% (mes.to.discard %in% colnames(data))) {
-          stop("Can't discard a measure which was not included in step1measure.")
+          stop("Can't discard a measure which was not included in Step1Measures.")
         }
         w <- which(colnames(data) %in% mes.to.discard)
-        data <- data[,-w]
+        data <- data[, -w, drop = FALSE]
       }
       
       if (!is.null(num.select)) {
@@ -145,20 +133,40 @@ Step2Selection <-
         }
         if (is.null(discard) & (num.select > ncol(data))) {
           stop(
-            "The requested number 'num.select' of measures to retain exceeds the number of measures included in step1measure."
+            "The requested number 'num.select' of measures to retain exceeds the number of measures included in Step1Measures."
           )
         }
+      }
+      
+      # Remove the measures that are constant because (1) these are not useful for
+      # discriminating between the trajectories and (2) they cause problem with the
+      # CheckCorrelation function later because their variance is 0 so division by 0
+      # occurs when computing correlation.
+      flag <- c()
+      cst.measures <- NULL
+      for (j in seq_len(ncol(data))) {
+        col <- data[, j]
+        if (max(col) == min(col)) {
+          flag <- c(flag, j)
+        }
+      }
+      if (length(flag) > 0) { 
+        cst.measures <- colnames(data)[flag]
+        data <- data[, -flag, drop = FALSE]    
+      }
+      if (ncol(data) == 0) {
+        stop("All the measures are constant.")
       }
       
       corr.vars <-
         CheckCorrelation(data, verbose = FALSE, is.return = TRUE)
       
       if (!is.null(corr.vars)) {
-        colinear.variables <- corr.vars
+        correlated.measures <- corr.vars
         corr.vars.pos <- which(names(data) %in% corr.vars[, 1])
-        data <- data[,-corr.vars.pos]
+        data <- data[, -corr.vars.pos]
       } else{
-        colinear.variables <- NULL
+        correlated.measures <- NULL
       }
       
       if (num.select > ncol(data) && !is.null(num.select)) {
@@ -179,7 +187,6 @@ Step2Selection <-
         num.select <- max(1, length(which(eigen.values > 1)))
       }
       
-      if (ncol(data) > 1) {
         PC <- psych::principal(Z, rotate = "none", nfactors = ncol(data))
         RC <-
           psych::principal(Z, rotate = "varimax", nfactors = num.select)
@@ -197,15 +204,10 @@ Step2Selection <-
                 which(row.names(principal.factors$loadings) %in% principal.variables)
               aux <- principal.factors$loadings[-w, ]
             }
-            principal.variables[j] <- names(which.max(abs(aux[, j])))
+            principal.variables[j] <- rownames(aux)[which.max(abs(aux[, j, drop = FALSE]))]
           }
-          output <- cbind(ID, data[, principal.variables])
+          output <- cbind(ID, data[, principal.variables, drop = FALSE])
         }
-      } else {
-        output <- trajMeasures$measures
-        PC <- NULL
-        RC <- NULL
-      }
       
       trajSelection <-
         structure(
@@ -213,7 +215,8 @@ Step2Selection <-
             selection = output,
             PC = PC,
             RC = RC,
-            colinear.variables = colinear.variables,
+            constant.measures = cst.measures,
+            correlated.measures = correlated.measures,
             measures = trajMeasures$measures,
             data = trajMeasures$data,
             time = trajMeasures$time,
@@ -227,34 +230,113 @@ Step2Selection <-
     
   }
 
+
 #'@rdname Step2Selection
 #'
 #'@export
 print.trajSelection <- function(x, ...) {
-  print(
-    paste(
-      x$colinear.variables[, 1],
-      " was discarded because it is perfectly or almost perfectly correlated with ",
-      x$colinear.variables[, 2],
-      ".",
-      sep = ""
-    )
-  )
-  cat("\n")
   
-  cat(
-    paste(
-      "In decreasing order of variance explained, the selected measures are ",
+  if(length(x$constant.measures) == 1){
+    cat(
       paste(
-        colnames(x$selection)[-1],
-        collapse = ', ',
+        paste(x$constant.measures, collapse = ", "),
+        " has been discarded due to being constant.\n",
         sep = ""
-      ),
-      ".",
-      sep = ""
+      )
     )
-  )
-  cat("\n")
+    cat("\n")
+    }
+  
+  if(length(x$constant.measures) > 1){
+    cat(
+      paste(
+        paste(x$constant.measures, collapse = ", "),
+        " have been discarded due to being constant.\n",
+        sep = ""
+      )
+    )
+    cat("\n")
+  }
+  
+  if (length(x$correlated.measures) > 0) {
+    for (i in 1:nrow(x$correlated.measures)) {
+      cat(
+        paste(
+          x$correlated.measures[i, 1],
+          " has been discarded due to being perfectly or almost perfectly correlated with ",
+          x$correlated.measures[i, 2],
+          ".\n",
+          sep = ""
+        )
+      ) 
+    }
+    cat("\n")
+  }
+  
+  if (!is.null(x$input$select)) {
+    if(length(colnames(x$selection)[-1]) > 1){
+      cat(
+        paste(
+          "The selected measures are ",
+          paste(
+            colnames(x$selection)[-1],
+            collapse = ', ',
+            sep = ""
+          ),
+          ".",
+          sep = ""
+        )
+      )
+    }
+    if(length(colnames(x$selection)[-1]) == 1){
+      cat(
+        paste(
+          "The selected measure is ",
+          paste(
+            colnames(x$selection)[-1],
+            collapse = ', ',
+            sep = ""
+          ),
+          ".",
+          sep = ""
+        )
+      )
+    }
+
+    
+  } else {
+    
+    if (length(colnames(x$selection)[-1]) > 1) {
+      cat(
+        paste(
+          "In decreasing order of variance explained, the selected measures are ",
+          paste(
+            colnames(x$selection)[-1],
+            collapse = ', ',
+            sep = ""
+          ),
+          ".",
+          sep = ""
+        )
+      )
+      cat("\n")
+    } else {
+      cat(
+        paste(
+          "The selected measure is ",
+          paste(
+            colnames(x$selection)[-1],
+            collapse = ', ',
+            sep = ""
+          ),
+          ".",
+          sep = ""
+        )
+      )
+      cat("\n")
+    }
+  }
+
   
   if (!is.null(x$RC)) {
     print(x$RC$loadings)
@@ -266,20 +348,34 @@ print.trajSelection <- function(x, ...) {
 #'@export
 summary.trajSelection <- function(object, ...) {
   if (!is.null(object$input$select)) {
-    cat(paste(
-      "The measures ",
-      paste(
-        colnames(object$selection)[-1],
-        collapse = ', ',
+    if(length(object$input$select) == 1){
+      cat(paste(
+        "The measure ",
+        paste(
+          colnames(object$selection)[-1],
+          collapse = ', ',
+          sep = ""
+        ),
+        " was selected.",
         sep = ""
-      ),
-      " were selected.",
-      sep = ""
-    ))
-  } else{
+      ))
+    }
+    if(length(object$input$select) > 1){
+      cat(paste(
+        "The measures ",
+        paste(
+          colnames(object$selection)[-1],
+          collapse = ', ',
+          sep = ""
+        ),
+        " were selected.",
+        sep = ""
+      ))
+    }
+} else{
     if (!is.null(object$input$num.select)) {
-      if (!is.null(object$colinear.variables)) {
-        dropped <- unique(object$colinear.variables[, 1])
+      if (!is.null(object$correlated.measures)) {
+        dropped <- unique(object$correlated.measures[, 1])
         cat(
           paste(
             "The measures ",
@@ -325,8 +421,8 @@ summary.trajSelection <- function(object, ...) {
         )
       }
     } else{
-      if (!is.null(object$colinear.variables)) {
-        dropped <- unique(object$colinear.variables[, 1])
+      if (!is.null(object$correlated.measures)) {
+        dropped <- unique(object$correlated.measures[, 1])
         cat(
           paste(
             "The measures ",

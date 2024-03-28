@@ -1,6 +1,6 @@
 #'@title Classify the Longitudinal Data Based on the Selected Measures.
 #'
-#'@description Classifies the trajectories by applying the K-mean clustering
+#'@description Classifies the trajectories by applying the k-means clustering
 #'  algorithm to the measures selected by \code{Step2Selection}.
 #'
 #'@param trajSelection object of class \code{trajSelection} as returned by
@@ -37,18 +37,19 @@
 #'
 #' @examples
 #' \dontrun{
+#'data("trajdata")
+#'trajdata.noGrp <- trajdata[, -which(colnames(trajdata) == "Group")] #remove the Group column
 #'
-#'m = Step1Measures(trajdata, ID = TRUE)
+#'m = Step1Measures(trajdata.noGrp, ID = TRUE, measures = 1:18)
 #'s = Step2Selection(m)
 #'
 #'s$RC$loadings
 #'
-#'s2 = Step2Selection(m, select = c(10, 12, 8, 4))
+#'s2 = Step2Selection(m, select = c(3, 13, 11, 15))
 #'
 #'c3.part <- Step3Clusters(s2, nclusters = 3)$partition
 #'c4.part <- Step3Clusters(s2, nclusters = 4)$partition
 #'c5.part <- Step3Clusters(s2, nclusters = 5)$partition
-#'
 #'}
 #'
 #'@seealso \code{\link[traj]{Step2Selection}}
@@ -59,8 +60,8 @@
 Step3Clusters <-
   function (trajSelection,
             nclusters = NULL,
-            nstart = 50,
-            iter.max = 20,
+            nstart = 200,
+            iter.max = 100,
             K.max = 8,
             B = 500,
             d.power = 2,
@@ -134,11 +135,11 @@ Step3Clusters <-
     decr.order <- rev(order(summary(factor(partition))))
     
     w <- list()
-    for (g in 1:nclusters) {
+    for (g in seq_len(nclusters)) {
       w[[g]] <- which(partition == g)
     }
     
-    for (g in 1:nclusters) {
+    for (g in seq_len(nclusters)) {
       partition[w[[g]]] <- decr.order[g]
     }
     

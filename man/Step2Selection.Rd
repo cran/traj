@@ -17,30 +17,25 @@ Step2Selection(trajMeasures, num.select = NULL, discard = NULL, select = NULL)
 \code{\link[traj]{Step1Measures}}.}
 
 \item{num.select}{an optional positive integer indicating the number of
-factors to keep in the second stage of the algorithm. Defaults to NULL so
+factors to keep in the second stage of the algorithm. Defaults to \code{NULL} so
 that all factors with variance greater than any one of the normalized
 measures are selected.}
 
 \item{discard}{an optional vector of positive integers corresponding to the
 measures to be dropped from the analysis. See
 \code{\link[traj]{Step1Measures}} for the list of measures. Defaults to
-NULL.}
+\code{NULL}.}
 
 \item{select}{an optional vector of positive integers corresponding to the
-measures to forcefully select. Defaults to NULL. If a vector is supplied,
+measures to forcefully select. Defaults to \code{NULL}. If a vector is supplied,
 the five-steps selection algorithm described above is bypassed and the
-corresponding measures are selected instead.
-
-Can be NULL or a numeric vector corresponding to the numerical identifier of
-measures present in \code{trajMeasures}. If a numeric vector is supplied,
-then four-steps selection algorithm described above is bypassed and the
 corresponding measures are selected instead.}
 
-\item{x}{object of class trajSelection.}
+\item{x}{object of class \code{trajSelection}.}
 
 \item{...}{further arguments passed to or from other methods.}
 
-\item{object}{object of class trajSelection.}
+\item{object}{object of class  \code{trajSelection}.}
 }
 \value{
 An object of class \code{trajSelection}; a list containing the values
@@ -51,35 +46,25 @@ well as a curated form of the arguments.
 This function applies the following dimension reduction algorithm
 to the measures computed by \code{\link[traj]{Step1Measures}}:
 \enumerate{
-\item Use principal component analysis (PCA) on the measure to form factors summarizing the variability in the measures;
-\item Drop the factors whose variance is smaller than any one of the normalized measures;
-\item Performs a varimax rotation on the remaining factors;
+\item Drop the measures whose values are constant across the trajectories;
+\item Use principal component analysis (PCA) on the measures to form factors summarizing the variability in the measures;
+\item Drop the factors whose variance is smaller than any one of the standardized measures;
+\item Perform a varimax rotation on the remaining factors;
 \item For each rotated factor, select the measure that has the highest correlation (aka factor loading) with it and that hasn't yet been selected;
 \item Drop the remaining measures.
 }
 }
-\details{
-In the presence of highly correlated measures (Pearson correlation >
-0.98), the function selects the highest-ranking measure on the list (see
-\code{\link[traj]{Step1Measures}}) and discards the others. Because the
-K-means algorithm is sensitive to outliers, measures which are quotients
-(i.e. 4, 7, 8, 15-17, 21-26) are prevented from taking extremely large or
-infinite values (caused by division by 0). Nishiyama's improved Chebychev
-bound is used to determine extreme values for each measure, corresponding to
-a 0.3\% probability threshold. Extreme values beyond the threshold are capped
-to the 0.3\% probability threshold. Measures corresponding to quotients which
-would be of the form 0/0 are set to 1. PCA is applied on the remaining
-measures using the \code{\link[psych]{principal}} function from the
-\code{psych} package.
-}
 \examples{
 \dontrun{
-m = Step1Measures(trajdata, ID = TRUE)
+data("trajdata")
+trajdata.noGrp <- trajdata[, -which(colnames(trajdata) == "Group")] #remove the Group column
+
+m = Step1Measures(trajdata.noGrp, measure = c(1:18), ID = TRUE)
 s = Step2Selection(m)
 
-s$RC$loadings
+print(s)
 
-s2 = Step2Selection(m, select = c(10, 12, 8, 4))
+s2 = Step2Selection(m, select = c(3, 13, 11, 15))
 }
 
 

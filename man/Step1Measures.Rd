@@ -7,7 +7,14 @@
 \title{Compute Measures for Identifying Patterns of Change in Longitudinal
 Data}
 \usage{
-Step1Measures(Data, Time = NULL, ID = FALSE, measures = 1:23, midpoint = NULL)
+Step1Measures(
+  Data,
+  Time = NULL,
+  ID = FALSE,
+  measures = c(1:17),
+  midpoint = NULL,
+  cap.outliers = TRUE
+)
 
 \method{print}{trajMeasures}(x, ...)
 
@@ -17,7 +24,7 @@ Step1Measures(Data, Time = NULL, ID = FALSE, measures = 1:23, midpoint = NULL)
 \item{Data}{a matrix or data frame in which each row contains the longitudinal
 data (trajectories).}
 
-\item{Time}{either NULL, a vector or a matrix/data frame of the same dimension
+\item{Time}{either \code{NULL}, a vector or a matrix/data frame of the same dimension
 as \code{Data}. If a vector, matrix or data frame is supplied, its entries
 are assumed to be measured at the times of the corresponding cells in
 \code{Data}. When set to \code{NULL} (the default), the times are assumed
@@ -28,15 +35,17 @@ equidistant.}
 trajectories. Defaults to \code{FALSE}.}
 
 \item{measures}{a vector containing the numerical identifiers of the measures
-to compute (see "Details" section below). The default, 1:23, corresponds to
-measures 1-23 and thus excludes the measures which require specifying a
+to compute (see "Details" section below). The default, 1:17, corresponds to
+measures 1-17 and thus excludes the measures which require specifying a
 midpoint.}
 
 \item{midpoint}{specifies which column of \code{Time} to use as the midpoint
-in measures 24-26. Can be NULL, an integer or a vector of integers of length
-the number of rows in \code{Time}. The default is NULL, in which case the
+in measure 18. Can be \code{NULL}, an integer or a vector of integers of length
+the number of rows in \code{Time}. The default is \code{NULL}, in which case the
 midpoint is the time closest to the median of the Time vector specific to
 each trajectory.}
+
+\item{cap.outliers}{logical. If \code{TRUE}, extreme values of the measures will be caped (see details below). Defaults to \code{TRUE}.}
 
 \item{x}{object of class trajMeasures.}
 
@@ -50,50 +59,57 @@ of the measures, a table of the outliers which have been capped, as well as
 a curated form of the function's arguments.
 }
 \description{
-\code{Step1Measures} computes up to 26 measures for each
+\code{Step1Measures} computes up to 18 measures for each
 longitudinal trajectory. See Details for the list of measures.
 }
 \details{
 Each trajectory must have a minimum of 3 observations otherwise it
 will be omitted from the analysis.
 
-The 26 measures and their numerical identifiers are listed below. Please
+The 18 measures and their numerical identifiers are listed below. Please
 refer to the vignette for the specific formulas used to compute them.
 \enumerate{
-\item  Range\cr
-\item  Mean of the function\cr
-\item  Functional standard deviation (SD)\cr
-\item  Coefficient of variation (ratio of measure 3 to measure 2)\cr
-\item  Overall change (initial value - final value)\cr
-\item  Mean change per unit time\cr
-\item  Overall change relative to initial value\cr
-\item  Overall change relative to functional mean (ratio of measure 5 to measure 2)\cr
+\item  Maximum\cr
+\item  Range (max - min)\cr
+\item  Mean value\cr
+\item  Standard deviation\cr
 \item  Slope of the linear model\cr
 \item  \eqn{R^2}: Proportion of variance explained by the linear model\cr
-\item  Maximum value of the speed\cr
-\item  Functional SD of the speed\cr
-\item  Mean absolute speed\cr
-\item  Maximum absolute speed\cr
-\item  Maximum absolute speed relative to the functional mean (ratio of measure 14 to measure 2)\cr
-\item  Maximum absolute speed relative to the slope (ratio of measure 14 to measure 9)\cr
-\item  Functional SD of the speed relative to the slope\cr(ratio of measure 12 to measure 9)
-\item  Mean acceleration\cr
-\item  Mean absolute acceleration\cr
-\item  Maximum of the absolute acceleration\cr
-\item  Maximum of the absolute acceleration relative to the functional (ratio of measure 20 to measure 2)\cr
-\item  Maximum of the absolute acceleration relative to the mean absolute speed (ratio of measure 20 to measure 13)\cr
-\item  Mean absolute acceleration relative to the mean absolute speed (ratio of measure 19 to measure 13)\cr
-\item  Early change relative to later change\cr
-\item  Early change relative to overall change\cr
-\item  Later change relative to overall change\cr
+\item  Curve length (total variation)\cr
+\item  Rate of intersection with the mean\cr
+\item  Proportion of time spent under the mean\cr
+\item  Minimum  of the first derivative\cr
+\item  Maximum of the first derivative\cr
+\item  Mean of the first derivative\cr
+\item  Standard deviation of the first derivative\cr
+\item  Minimum  of the second derivative\cr
+\item  Maximum of the second derivative\cr
+\item  Mean of the second derivative\cr
+\item  Standard deviation of the second derivative\cr
+\item  Early change/Later change\cr
 }
+
+In the presence of highly correlated measures (Pearson correlation >
+0.98), the function selects the highest-ranking measure on the list (see
+\code{\link[traj]{Step1Measures}}) and discards the others. Because the
+K-means algorithm is sensitive to outliers, the measures are prevented from taking extreme or
+infinite values (caused by a possible division by 0 in m18). Nishiyama's improved Chebychev
+bound is used to determine extreme values for each measure, corresponding to
+a 0.3\% probability threshold. Extreme values beyond the threshold are then capped
+to the 0.3\% probability threshold. If applicable, the values of m18 which
+would be of the form 0/0 are set to 1. PCA is applied on the remaining
+measures using the \code{\link[psych]{principal}} function from the
+\code{psych} package.
 }
 \examples{
 \dontrun{
-m1 = Step1Measures(trajdata, ID = TRUE, measures = 24:26, midpoint = NULL)
-m2 = Step1Measures(trajdata, ID = TRUE, measures = 24:26, midpoint = 3)
+data("trajdata")
+trajdata.noGrp <- trajdata[, which(colnames(trajdata) == "Group")] #remove the Group column
 
-identical(s1$measures, s2$measures)
+m1 = Step1Measures(trajdata.noGrp, ID = TRUE, measures = 18, midpoint = NULL)
+m2 = Step1Measures(trajdata.noGrp, ID = TRUE, measures = 18, midpoint = 3)
+
+identical(m1$measures, m2$measures)
 }
 
 }
