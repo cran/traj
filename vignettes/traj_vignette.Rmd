@@ -1,3 +1,4 @@
+
 ---
 title: "Using the traj package"
 author: "Laurence Boulanger"
@@ -17,12 +18,13 @@ vignette: >
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
 ## Introduction
 
-The `traj` package implements a clustering algorithm for functional data (henceforth referred to as trajectories) that extends previous work from Leffondré et al [1]. This algorithm is comprised of three steps. The first step sumarizes the main features of the trajectories by computing the 18 measures listed below and detailed in Appendix A.
+The `traj` package implements a clustering algorithm for functional data (henceforth referred to as trajectories) that extends previous work from Leffondré et al [1]. This algorithm is comprised of three steps. The first step summarizes the main features of the trajectories by computing the 18 measures listed below and detailed in Appendix A.
 
 1.  Maximum
-2.  Range (max - min)
+2.  Range
 3.  Mean value
 4.  Standard deviation
 5.  Slope of the linear model
@@ -40,14 +42,14 @@ The `traj` package implements a clustering algorithm for functional data (hencef
 17. Standard deviation of the second derivative
 18. Later change/Early change
 
-The second step performs dimensionality reduction on the 18 measures to extract the main features of the trajectories. Specifically,
+The second step performs a dimensionality reduction on the 18 measures to extract the main features of the trajectories. Specifically,
 
 1.  Measures that are constant across trajectories are discarded because they do not provide any discriminating information.
-2.  A principal component analysis is conducted on the measures. The main principal components (defined as those principal components contributing more to the total variance than any of the individual standardized measures) are selected.
+2.  A principal component analysis (PCA) is conducted on the measures. The main principal components (defined as those principal components contributing more to the total variance than any of the individual standardized measures) are selected.
 3.  A varimax rotation is applied to the main principal components.
 4.  The measure which is most strongly correlated with each rotated component is selected, starting from the component that explains the most variance.
 
-In the third step, the k-means algorithm is used to cluster the trajectories based on the measures selected in step 2.
+In the third step, a clustering algorithm is used to form clusters of trajectories based on the measures selected in step 2.
 
 ## An example
 
@@ -87,21 +89,18 @@ legend("topright",legend = c(paste("A (n = ", 50, ")", sep = ""), paste("B (n = 
 library(traj)
 data(trajdata) 
 head(trajdata)
-dat <- trajdata[, -c(1:2)]
+dat <- trajdata[, -c(1,2)]
 ```
 
 Each trajectory is made up of six observations and there are no missing values. The function `Step1Measures` computes the measures. By default, measure 18 (Early change/Later change) is not included in the analysis. This is because, depending on the situation (uneven observation times, attrition, missing values, etc.), there might not be, for each trajectory, a natural midpoint. In the present data set, we include measure 18. By leaving the 'midpoint' argument at its default of `NULL`, the third observation will be taken as the midpoint.
 
 ```{r ex1.step1}
-step1 <- Step1Measures(Data = dat, 
-                       ID = FALSE, 
-                       measures = 1:18, 
-                       midpoint = NULL) 
+step1 <- Step1Measures(Data = dat, measures = 1:18) 
 
 summary(step1)
 ```
 
-Two outlying values were detected in measure 18 of trajectories ID23 and ID110 and were capped to more likely values according to the distribution of m18 (see Appendix B). Once the measures are computed, we use the `Step2Selection` function to extract the measures that best characterize the trajectories.
+Once the measures are computed, we use the `Step2Selection` function to extract the measures that best characterize the trajectories.
 
 ```{r ex1.step2a}
 step2 <- Step2Selection(trajMeasures = step1) 
@@ -114,22 +113,22 @@ Two measures are defined as "perfectly or almost perfectly correlated" if the ab
 print(step2)
 ```
 
-Measure 4 (Standard deviation) was dropped because it is perfectly or almost perfectly correlated with measure 2 (Range) and measure 12 (Mean of the first derivative) was dropped because it is perfectly or almost perfectly correlated with measure 5 (Slope of the linear model). The `Step3Clusters` function uses the k-means algorithm (function `stats:::kmeans`) on the measures selected in step 2 to cluster the trajectories.
+Measure 4 (Standard deviation) was dropped because it is perfectly or almost perfectly correlated with measure 2 (Range) and measure 12 (Mean of the first derivative) was dropped because it is perfectly or almost perfectly correlated with measure 5 (Slope of the linear model). The `Step3Clusters` function uses the k-medoids algorithm (function `cluster:::pam`) on the measures selected in step 2 to cluster the trajectories.
 
 ```{r ex1.step3a}
 library(cluster)
-set.seed(141114)
-step3 <- Step3Clusters(trajSelection = step2, B = 20, nclusters = NULL) # B = 20 is used in the interest of time; the default is B = 500.
+set.seed(1337)
+step3 <- Step3Clusters(trajSelection = step2) 
 ```
 
-By setting `nclusters` to `NULL`, `Step3Clusters` uses the criterion proposed by Tibshirani et al. [2] to select the optimal number of clusters. In our case, this gives $k=4$ as can be inspected visually with
+If the `nclusters` argument is set to `NULL` (the default), the optimal number $k$ of clusters will be determined using the Calinski-Harabasz criterion. In our case, this gives $k=4$ cluster as can be inspected visually with
 
 ```{r ex1.step3b}
 par(mfrow = c(1, 1))
 plot(step3, which.plots = 1, ask = FALSE)
 ```
 
-To visually inspect the classification, we write `plot(step3, ask = TRUE)`.
+To visually inspect the classification, we write `plot(step3, ask = TRUE)`. We can also ask for specific plots with `which.plots`.
 
 ```{r ex1.step3e, echo = FALSE}
 par(mfrow = c(1, 1))
@@ -292,7 +291,7 @@ In this section, we expand on how the eighteen measures are computed. Let $y=y(t
 
 ## Appendix B: The capping procedure
 
-In a recent paper published on the arXiv [3], the author proves that for any *continuous* random variable $X$ with finite first two moments there holds $$
+If the `cap.outliers` argument of the `Step1Measures` function is set to `TRUE` or if measure contains values that are infinite (cause by a division by 0), the outliers will be capped as follows. In a recent paper published on the arXiv [3], the author proves that for any *continuous* random variable $X$ with finite first two moments there holds $$
 P[|X-\mu|>k\sigma]<\sigma M(k)\alpha(k),
 $$where $M(k)$ is the least upper bound of the probability density function on $\{x \ | \ |x-\mu|>k\sigma\}$ and where $\alpha(k)$ is the unique real root of the cubic polynomial$$t^3 + 2\pi kt^2 + 2\pi e k^2t - \frac{2\pi e}{\sigma M(k)}.$$Suppose that our data set contains $n$ trajectories. This gives us a sample $X_1,\ldots,X_n$ from the distribution of $X$. Our capping procedure consists of the following steps.
 

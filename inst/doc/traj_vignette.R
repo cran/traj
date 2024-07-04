@@ -34,13 +34,10 @@ legend("topright",legend = c(paste("A (n = ", 50, ")", sep = ""), paste("B (n = 
 library(traj)
 data(trajdata) 
 head(trajdata)
-dat <- trajdata[, -c(1:2)]
+dat <- trajdata[, -c(1,2)]
 
 ## ----ex1.step1----------------------------------------------------------------
-step1 <- Step1Measures(Data = dat, 
-                       ID = FALSE, 
-                       measures = 1:18, 
-                       midpoint = NULL) 
+step1 <- Step1Measures(Data = dat, measures = 1:18) 
 
 summary(step1)
 
@@ -53,8 +50,8 @@ print(step2)
 
 ## ----ex1.step3a---------------------------------------------------------------
 library(cluster)
-set.seed(141114)
-step3 <- Step3Clusters(trajSelection = step2, B = 20, nclusters = NULL) # B = 20 is used in the interest of time; the default is B = 500.
+set.seed(1337)
+step3 <- Step3Clusters(trajSelection = step2) 
 
 ## ----ex1.step3b---------------------------------------------------------------
 par(mfrow = c(1, 1))
