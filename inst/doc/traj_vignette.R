@@ -37,7 +37,7 @@ head(trajdata)
 dat <- trajdata[, -c(1,2)]
 
 ## ----ex1.step1----------------------------------------------------------------
-step1 <- Step1Measures(Data = dat, measures = 1:18) 
+step1 <- Step1Measures(Data = dat, measures = 1:19) 
 
 summary(step1)
 
@@ -51,34 +51,30 @@ print(step2)
 ## ----ex1.step3a---------------------------------------------------------------
 library(cluster)
 set.seed(1337)
-step3 <- Step3Clusters(trajSelection = step2) 
-
-## ----ex1.step3b---------------------------------------------------------------
-par(mfrow = c(1, 1))
-plot(step3, which.plots = 1, ask = FALSE)
+step3 <- Step3Clusters(trajSelection = step2, nclusters = 4) 
 
 ## ----ex1.step3e, echo = FALSE-------------------------------------------------
 par(mfrow = c(1, 1))
-plot(step3, which.plots = 2, ask = FALSE)
+plot(step3, which.plots = 1, ask = FALSE)
 
 ## ----ex1.step3f, echo = FALSE-------------------------------------------------
 par(mfrow = c(1, 1))
-plot(step3, which.plots = 3, ask = FALSE)
+plot(step3, which.plots = 2, ask = FALSE)
 
 ## ----ex1.step3g, echo = FALSE-------------------------------------------------
 par(mfrow = c(1, 1))
-plot(step3, which.plots = 4, ask = FALSE)
+plot(step3, which.plots = 3, ask = FALSE)
 
 ## ----ex1.step3h, echo = FALSE-------------------------------------------------
 par(mfrow = c(1, 1))
-plot(step3, which.plots = 5, ask = FALSE)
+plot(step3, which.plots = 4, ask = FALSE)
 
 ## ----ex1.step3i, echo = FALSE-------------------------------------------------
 par(mfrow = c(1, 1))
-plot(step3, which.plots = 6, ask = FALSE)
+plot(step3, which.plots = 5, ask = FALSE)
 
 ## ----ex1.step3n---------------------------------------------------------------
-color.pal <- palette.colors(palette = "Okabe-Ito", alpha = 1)
+color.pal <- palette.colors(palette = "Polychrome 36", alpha = 1)[-2] 
 par(mfrow = c(1, 1))
 for(k in 1:4){
   w <- which(step3$partition$Cluster == k)

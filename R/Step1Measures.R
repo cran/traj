@@ -1,7 +1,7 @@
 #'@title Compute Measures for Identifying Patterns of Change in Longitudinal
 #'  Data
 #'
-#'@description \code{Step1Measures} computes up to 18 measures for each
+#'@description \code{Step1Measures} computes up to 19 measures for each
 #'  longitudinal trajectory. See Details for the list of measures.
 #'@param Data a matrix or data frame in which each row contains the longitudinal
 #'  data (trajectories).
@@ -14,11 +14,11 @@
 #'  \code{Time} corresponds to an \code{ID} variable identifying the
 #'  trajectories. Defaults to \code{FALSE}.
 #'@param measures a vector containing the numerical identifiers of the measures
-#'  to compute. The default, 1:17, corresponds to
-#'  measures 1-17 and thus excludes the measures which require specifying a
+#'  to compute. The default, 1:18, corresponds to
+#'  measures 1-18 and thus excludes the measures which require specifying a
 #'  midpoint.
 #'@param midpoint specifies which column of \code{Time} to use as the midpoint
-#'  in measure 18. Can be \code{NULL}, an integer or a vector of integers of length
+#'  in measure 19. Can be \code{NULL}, an integer or a vector of integers of length
 #'  the number of rows in \code{Time}. The default is \code{NULL}, in which case the
 #'  midpoint is the time closest to the median of the Time vector specific to
 #'  each trajectory.
@@ -34,13 +34,14 @@
 #'@details Each trajectory must have a minimum of 3 observations otherwise it
 #'  will be omitted from the analysis.
 #'
-#'  The 18 measures and their numerical identifiers are listed below. Please
+#'  The 19 measures and their numerical identifiers are listed below. Please
 #'  refer to the vignette for the specific formulas used to compute them.
 #'\enumerate{
 #'\item  Maximum\cr
 #'\item  Range (max - min)\cr
 #'\item  Mean value\cr
 #'\item  Standard deviation\cr
+#'\item  Intercept of linear model\cr
 #'\item  Slope of the linear model\cr
 #'\item  \eqn{R^2}: Proportion of variance explained by the linear model\cr
 #'\item  Curve length (total variation)\cr
@@ -80,8 +81,8 @@
 #'data("trajdata")
 #'trajdata.noGrp <- trajdata[, -which(colnames(trajdata) == "Group")] #remove the Group column
 #'
-#'m1 = Step1Measures(trajdata.noGrp, ID = TRUE, measures = 18, midpoint = NULL)
-#'m2 = Step1Measures(trajdata.noGrp, ID = TRUE, measures = 18, midpoint = 3)
+#'m1 = Step1Measures(trajdata.noGrp, ID = TRUE, measures = 19, midpoint = NULL)
+#'m2 = Step1Measures(trajdata.noGrp, ID = TRUE, measures = 19, midpoint = 3)
 #'
 #'identical(m1$measures, m2$measures)
 #'}
@@ -93,7 +94,7 @@ Step1Measures <-
   function (Data,
             Time = NULL,
             ID = FALSE,
-            measures = c(1:17),
+            measures = c(1:18),
             midpoint = NULL,
             cap.outliers = FALSE) {
     
@@ -126,7 +127,7 @@ Step1Measures <-
       if (Time.is.vector == FALSE) {
         ID.time <- time[, 1]
         time <- time[,-1]
-        if (identical(IDvector, ID.time) == FALSE) {
+        if (identical(as.numeric(IDvector), as.numeric(ID.time)) == FALSE) {
           stop("ID vector in Data differs from ID vector in Time.")
         }
       }
@@ -135,20 +136,30 @@ Step1Measures <-
     }
     
     if (identical(dim(time), dim(data))) {
-      if (identical(is.na(data), is.na(time)) == FALSE) {
-        stop(
-          "Data has cells with no corresponding time or Time has cells with no corresponding data."
-        )
-      }
+      
       
       data2 <- data
       time2 <- time
-      for (i in seq_len(nrow(data))) {
-        NA.str_i <- is.na(data)[i,]
+      
+      #if either data of time has an NA at [i,j], do the same for the other
+      for(i in seq_len(nrow(data2))) {
+        for(j in seq_len(ncol(data2))) {
+          if(is.na(data2[i,j])){
+            time2[i,j] <- NA
+          }  
+          if(is.na(time2[i,j])){
+            data2[i,j] <- NA
+          } 
+        }
+      }
+      
+      rows.rmv <- c()
+      
+      for (i in seq_len(nrow(data2))) {
+        NA.str_i <- is.na(data2)[i,]
         w <- unname(which(NA.str_i == FALSE))
         if (length(w) < 3) {
-          data2 <- data2[-i,]
-          time2 <- time2[-i,]
+          rows.rmv <- c(rows.rmv, i)
           warning (
             paste(
               "Row ",
@@ -157,18 +168,25 @@ Step1Measures <-
               sep = ""
             )
           )
-          IDvector <- IDvector[-i]
-        } else if (!identical(w, seq_len(length(w)))) {
-          stop(
-            paste(
-              "Row ",
-              i,
-              " of Data is not formatted correctly. Rows should be of the form X Y ... Z NA ... NA.",
-              sep = ""
-            )
-          )
         }
       }
+      
+      if(length(rows.rmv > 0)){
+        IDvector <- IDvector[-rows.rmv]
+        data2 <- data2[-rows.rmv, ]
+        time2 <- time2[-rows.rmv, ]
+      }
+      
+      for(i in seq_len(nrow(data2))) {
+        NA.str_i <- is.na(data2)[i,]
+        w <- unname(which(NA.str_i == FALSE))
+        v <- rep(NA, ncol(data2))
+        v[seq_len(length(w))] <- data2[i, w]
+        data2[i, ] <- v
+        v[seq_len(length(w))] <- time2[i, w]
+        time2[i, ] <- v
+      }
+      
       data <- data2
       time <- time2
       
@@ -265,7 +283,7 @@ Step1Measures <-
     ##         Construct vector of "mid points"         ##
     ######################################################
     
-    if (TRUE %in% (18 %in% measures)) {
+    if (TRUE %in% (19 %in% measures)) {
       mid.position <- c()
       
       if (is.null(midpoint)) {
@@ -294,7 +312,7 @@ Step1Measures <-
               paste(
                 "When left blank, the 'midpoint' argument defaults to the observation time closests to the median time 0.5*(max(Time)-min(Time)), but this can't be either the first or last observation time. As a result, row ",
                 Lines,
-                " has been removed. To avoid this, consider excluding measure 18 from the analysis or providing custom 'midpoint' values.",
+                " has been removed. To avoid this, consider excluding measure 19 from the analysis or providing custom 'midpoint' values.",
                 sep = ""
               )
             )
@@ -384,7 +402,7 @@ Step1Measures <-
     }
     
     #mean
-    if (sum(c(3, 4, 8, 9) %in% measures) > 0) {
+    if (sum(c(3, 4, 9, 10) %in% measures) > 0) {
       m3 <- c()
       for (i in seq_len(nrow(data))) {
         y <- data[i, complete.cases(data[i, ])]
@@ -405,11 +423,19 @@ Step1Measures <-
       }
     }
     
-    #slope of linear model
+    #intercept of linear model
     if (5 %in% measures) {
       for (i in seq_len(nrow(data))) {
         b <- coefficients(lm(data[i, ] ~ time[i, ]))
-        output$m5[i] <- b[2]
+        output$m5[i] <- b[1]
+      }
+    }
+    
+    #slope of linear model
+    if (6 %in% measures) {
+      for (i in seq_len(nrow(data))) {
+        b <- coefficients(lm(data[i, ] ~ time[i, ]))
+        output$m6[i] <- b[2]
       }
     }
     
@@ -418,16 +444,16 @@ Step1Measures <-
     options(warn = -1)
     
     #R^2
-    if (6 %in% measures) {
+    if (7 %in% measures) {
       for (i in seq_len(nrow(data))) {
         model <- lm(data[i, ] ~ time[i, ])
-        output$m6[i] <- summary(model)$r.squared
+        output$m7[i] <- summary(model)$r.squared
       }
     }
     options(warn = defaultW)
     
     #curve length:
-    if (7 %in% measures) { 
+    if (8 %in% measures) { 
       for (i in seq_len(nrow(data))) {
         y <- data[i, complete.cases(data[i, ])]
         x <- time[i, complete.cases(time[i, ])]
@@ -435,13 +461,13 @@ Step1Measures <-
         for(k in seq_along(y)[-length(y)]){
           Length <- Length + sqrt( (x[k+1] - x[k])^2 + (y[k+1] - y[k])^2 )
         }
-        output$m7[i] <- Length
+        output$m8[i] <- Length
       }
     }
     
     #rate of intersections with the mean
     
-    if (8 %in% measures) { 
+    if (9 %in% measures) { 
       intersection.count <- c()
       for (i in seq_len(nrow(data))) {
         norm <- data[i, ] - m3[i]
@@ -457,12 +483,12 @@ Step1Measures <-
             }
           }
         }
-        output$m8[i] <- intersection.count[i] /( max(x) - min(x) )
+        output$m9[i] <- intersection.count[i] /( max(x) - min(x) )
       }
     }
     
     #fraction of time spent above the mean (if this is small, then there are big sharp spikes)
-    if (9 %in% measures) {
+    if (10 %in% measures) {
       for (i in seq_len(nrow(data))) {
         norm <- data[i, ] - m3[i]
         y <- norm[complete.cases(norm)]
@@ -499,7 +525,7 @@ Step1Measures <-
             }
           }
         }
-        output$m9[i] <- blue.time/(blue.time + red.time)
+        output$m10[i] <- blue.time/(blue.time + red.time)
       }
     }
     
@@ -507,7 +533,7 @@ Step1Measures <-
     ### Measures on y'(t) ###
     
     # If a measure involving the speed or the acceleration was requested, compute the derivative:
-    if (sum(measures %in% 10:17) > 0) {
+    if (sum(measures %in% 11:18) > 0) {
       speed.data <- data
       for (i in seq_len(nrow(data))) {
         y <- data[i, complete.cases(data[i, ])]
@@ -517,40 +543,40 @@ Step1Measures <-
     }
     
     #min
-    if (10 %in% measures) {
+    if (11 %in% measures) {
       for (i in seq_len(nrow(speed.data))) {
-        output$m10[i] <-
+        output$m11[i] <-
           min(speed.data[i, ], na.rm = TRUE)
       }
     }
     
     #max
-    if (11 %in% measures) {
+    if (12 %in% measures) {
       for (i in seq_len(nrow(speed.data))) {
-        output$m11[i] <-
+        output$m12[i] <-
           max(speed.data[i, ], na.rm = TRUE)
       }
     }
     
     #mean 
-    if (sum(c(12, 13) %in% measures) > 0) {
-      m12 <- c()
+    if (sum(c(13, 14) %in% measures) > 0) {
+      m13 <- c()
       for (i in seq_len(nrow(speed.data))) {
         y <- speed.data[i, complete.cases(speed.data[i, ])]
         x <- time[i, complete.cases(time[i, ])]
-        m12[i] <- FctMean(x, y)
+        m13[i] <- FctMean(x, y)
       }
-      if (12 %in% measures) {
-        output$m12 <- m12
+      if (13 %in% measures) {
+        output$m13 <- m13
       }
     }
     
     #SD
-    if (13 %in% measures) {
+    if (14 %in% measures) {
       for (i in seq_len(nrow(speed.data))) {
         y <- speed.data[i, complete.cases(speed.data[i, ])]
         x <- time[i, complete.cases(time[i, ])]
-        output$m13[i] <- sqrt(FctMean(x, (y - m12[i]) ^ 2))
+        output$m14[i] <- sqrt(FctMean(x, (y - m13[i]) ^ 2))
       }
     }
     
@@ -560,7 +586,7 @@ Step1Measures <-
     
     
     
-    if (sum(measures %in% 14:17) > 0) {
+    if (sum(measures %in% 15:18) > 0) {
       accel.data <- speed.data
       for (i in seq_len(nrow(accel.data))) {
         y <- speed.data[i, complete.cases(speed.data[i, ])]
@@ -570,49 +596,49 @@ Step1Measures <-
     }
     
     #min
-    if (14 %in% measures) {
+    if (15 %in% measures) {
       for (i in seq_len(nrow(accel.data))) {
-        output$m14[i] <-
+        output$m15[i] <-
           min(accel.data[i, ], na.rm = TRUE)
       }
     }
     
     #max
-    if (15 %in% measures) {
+    if (16 %in% measures) {
       for (i in seq_len(nrow(accel.data))) {
-        output$m15[i] <-
+        output$m16[i] <-
           max(accel.data[i, ], na.rm = TRUE)
       }
     }
     
     #mean 
-    if (sum(c(16, 17) %in% measures) > 0) {
-      m16 <- c()
+    if (sum(c(17, 18) %in% measures) > 0) {
+      m17 <- c()
       for (i in seq_len(nrow(accel.data))) {
         y <- accel.data[i, complete.cases(accel.data[i, ])]
         x <- time[i, complete.cases(time[i, ])]
-        m16[i] <- FctMean(x, y)
+        m17[i] <- FctMean(x, y)
       }
-      if (16 %in% measures) {
-        output$m16 <- m16
+      if (17 %in% measures) {
+        output$m17 <- m17
       }
     }
     
     #SD
-    if (17 %in% measures) {
+    if (18 %in% measures) {
       for (i in seq_len(nrow(accel.data))) {
         y <- accel.data[i, complete.cases(accel.data[i, ])]
         x <- time[i, complete.cases(time[i, ])]
-        output$m17[i] <- sqrt(FctMean(x, (y - m16[i]) ^ 2))
+        output$m18[i] <- sqrt(FctMean(x, (y - m17[i]) ^ 2))
       }
     }
     
     #later change/early change
-    if (18 %in% measures) {
+    if (19 %in% measures) {
       for (i in seq_len(nrow(data))) {
         early <- Last(data[i, 1:mid.position[i]]) - First(data[i, 1:mid.position[i]])
         later <- Last(data[i, mid.position[i]:ncol(data)]) - First(data[i, mid.position[i]:ncol(data)])
-        output$m18[i] <- later/early
+        output$m19[i] <- later/early
       }
     }
     
@@ -627,9 +653,9 @@ Step1Measures <-
       
       outliers <- NULL
       
-      if ("m18" %in% colnames(output)) {
+      if ("m19" %in% colnames(output)) {
         
-        w.inf <- which(is.infinite(output$m18))
+        w.inf <- which(is.infinite(output$m19))
         
         if (length(w.inf) > 0) {
           
@@ -638,7 +664,7 @@ Step1Measures <-
           colnames(outliers) <- colnames(output)
           outliers[, 1] <- output$ID
           
-          y <- output$m18
+          y <- output$m19
           y.TRUE <- y
           n <- length(y)
           which.inf <- which(is.infinite(y.TRUE))
@@ -697,10 +723,10 @@ Step1Measures <-
           }
           
           cap <- w.inf
-          outliers$m18[cap] <- signif(y[cap], 3)
+          outliers$m19[cap] <- signif(y[cap], 3)
           
           y[cap] <- mu + sign(y[cap]) * k.opt * sigma
-          output$m18 <- y
+          output$m19 <- y
           
           
           row.rm <- which(rowSums(!is.na(outliers[, -c(1), drop = FALSE])) == 0)
@@ -708,7 +734,7 @@ Step1Measures <-
           col.kp <- which(colSums(!is.na(outliers)) != 0)
           outliers <- outliers[, col.kp, drop = FALSE]
           
-          warning(paste("For subject(s) ", paste(w.inf, collapse = ", "), ", the value of measure 18 was Inf so it has been capped.", sep=""))
+          warning(paste("For subject(s) ", paste(w.inf, collapse = ", "), ", the value of measure 19 was Inf so it has been capped.", sep=""))
         }
       }
     }
@@ -835,20 +861,21 @@ summary.trajMeasures <- function(object, ...) {
   cat("m2: Range\n")
   cat("m3: Mean value\n")
   cat("m4: Standard deviation\n")
-  cat("m5: Slope of the linear model\n")
-  cat("m6: Proportion of variance explained by the linear model (R squared)\n")
-  cat("m7: Curve length (total variation)\n")
-  cat("m8: Number of times crossing the mean per unit time\n")
-  cat("m9: Proportion of time spent under the mean\n")
-  cat("m10: Minimum of the first derivative\n")
-  cat("m11: Maximum of the first derivative\n")
-  cat("m12: Mean of the first derivative\n")
-  cat("m13: Standard deviation of the first derivative\n")
-  cat("m14: Minimum of the second derivative\n")
-  cat("m15: Maximum of the second derivative\n")
-  cat("m16: Mean of the second derivative\n")
-  cat("m17: Standard deviation of the second derivative\n")
-  cat("m18: Later change/Early change\n")
+  cat("m5: Intercept of the linear model\n")
+  cat("m6: Slope of the linear model\n")
+  cat("m7: Proportion of variance explained by the linear model (R squared)\n")
+  cat("m8: Curve length (total variation)\n")
+  cat("m9: Number of times crossing the mean per unit time\n")
+  cat("m10: Proportion of time spent under the mean\n")
+  cat("m11: Minimum of the first derivative\n")
+  cat("m12: Maximum of the first derivative\n")
+  cat("m13: Mean of the first derivative\n")
+  cat("m14: Standard deviation of the first derivative\n")
+  cat("m15: Minimum of the second derivative\n")
+  cat("m16: Maximum of the second derivative\n")
+  cat("m17: Mean of the second derivative\n")
+  cat("m18: Standard deviation of the second derivative\n")
+  cat("m19: Later change/Early change\n")
   
   cat("\n")
   
